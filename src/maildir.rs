@@ -21,7 +21,10 @@ impl Maildir {
     }
 
     pub fn has_subdirs(&self) -> bool {
-        unimplemented!()
+        match self.subdirs {
+            Some(s) => s.len() != 0,
+            None    => false,
+        }
     }
 
     pub fn subdirs(&self) -> Option<&Vec<Maildir>> {
