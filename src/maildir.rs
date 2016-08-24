@@ -72,7 +72,7 @@ impl Maildir {
         }
     }
 
-    fn get_mails<I: Iterator<Item = ParsedMail>>(&self, subdir: &str) -> Result<I> {
+    fn get_mails<'a, I: Iterator<Item = ParsedMail<'a>>>(&self, subdir: &str) -> Result<I> {
         self.get_mail_pathes(subdir)
             .map(|_| unimplemented!())
     }
