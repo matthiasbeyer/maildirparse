@@ -25,7 +25,7 @@ impl Maildir {
     }
 
     pub fn subdirs(&self) -> Option<&Vec<Maildir>> {
-        unimplemented!()
+        self.subdirs.as_ref()
     }
 
     pub fn new_mails_pathes<I: Iterator<Item = PathBuf>>(&self) -> Result<I> {
