@@ -2,6 +2,7 @@ use std::path::PathBuf;
 
 use mailparse::parse_mail;
 use mailparse::ParsedMail;
+use walkdir::WalkDir;
 
 use result::Result;
 use error::MaildirError;
@@ -56,7 +57,37 @@ impl Maildir {
     }
 
     pub fn from_dir_recursive(p: PathBuf) -> Result<Maildir> {
-        unimplemented!()
+        let mut this = try!(Maildir::from_path(p.clone()));
+
+        let mut v = vec![];
+        for entry in WalkDir::new(p) {
+            if entry.file_type().is_dir() {
+                match entry {
+                    Ok(entry) => {
+                        match Maildir::from_path(PathBuf::from(entry.path())) {
+                            Ok(subdir) => v.push(subdir),
+                            Err(e) => {
+                                match e.kind() {
+                                    MEK::NotAMaildirError   |
+                                    MEK::CurDirDoesNotExist |
+                                    MEK::NewDirDoesNotExist |
+                                    MEK::TmpDirDoesNotExist => {
+                                        /* ignored */
+                                    },
+                                    _ => return Err(e),
+                                }
+                            },
+                        }
+
+                    },
+
+                    Err(e) => return Err(MEK::IOError.into_error_with_cause(Box::new(e))),
+                }
+            }
+        }
+
+        this.subdirs = Some(v);
+        Ok(this)
     }
 
     pub fn load_subdirs(&mut self) -> Result<&Vec<Maildir>> {
