@@ -20,6 +20,15 @@ impl Maildir {
         unimplemented!()
     }
 
+    pub fn load_subdirs(&mut self) -> Result<&Vec<Maildir>> {
+        match self.subdirs {
+            Some(v) => Ok(&v),
+            None => {
+                unimplemented!()
+            },
+        }
+    }
+
     pub fn has_subdirs(&self) -> bool {
         match self.subdirs {
             Some(s) => s.len() != 0,
