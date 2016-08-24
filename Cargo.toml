@@ -5,4 +5,5 @@ authors = ["Matthias Beyer <mail@beyermatthias.de>"]
 
 [dependencies]
 mailparse = "0.2.0"
+walkdir = "0.1.*"
 
