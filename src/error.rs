@@ -6,20 +6,19 @@ use std::fmt::{Display, Formatter};
 pub enum MaildirErrorKind {
     IOError,
     NotAMaildirError,
+    CurDirDoesNotExist,
+    NewDirDoesNotExist,
+    TmpDirDoesNotExist,
 }
 
 impl MaildirErrorKind {
 
-    fn into_error_with_cause(self, cause: Box<Error>) -> MaildirError {
-        MaildirError::new(self, Some(cause))
+    pub fn into_error(self) -> MaildirError {
+        MaildirError::new(self, None)
     }
 
-}
-
-impl Into<MaildirError> for MaildirErrorKind {
-
-    fn into(self) -> MaildirError {
-        MaildirError::new(self, None)
+    pub fn into_error_with_cause(self, cause: Box<Error>) -> MaildirError {
+        MaildirError::new(self, Some(cause))
     }
 
 }
@@ -48,7 +47,10 @@ impl MaildirError {
 fn errkind_to_str(k: &MaildirErrorKind) -> &'static str {
     match *k {
         IOError => "IO Error",
-        NotAMaildirError => "Not a maildir"
+        NotAMaildirError => "Not a maildir",
+        CurDirDoesNotExist => "'cur' directory does not exist",
+        NewDirDoesNotExist => "'new' directory does not exist",
+        TmpDirDoesNotExist => "'tmp' directory does not exist",
     }
 }
 
