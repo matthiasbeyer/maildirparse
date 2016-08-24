@@ -4,6 +4,8 @@ use mailparse::parse_mail;
 use mailparse::ParsedMail;
 
 use result::Result;
+use error::MaildirError;
+use error::MaildirErrorKind as MEK;
 
 pub struct Maildir {
     path: PathBuf,
@@ -13,7 +15,44 @@ pub struct Maildir {
 impl Maildir {
 
     pub fn from_path(p: PathBuf) -> Result<Maildir> {
-        unimplemented!()
+        p.read_dir()
+            .map_err(Box::new)
+            .map_err(|e| MEK::IOError.into_error_with_cause(e))
+            .and_then(|rd| {
+                let res = rd.fold(Ok((false, false, false)), |acc, elem| {
+                    acc.and_then(|tpl| {
+                        elem.and_then(|e| {
+                            let p = e.path();
+                            Ok((tpl.0 || p == PathBuf::from("./cur"),
+                                tpl.1 || p == PathBuf::from("./new"),
+                                tpl.2 || p == PathBuf::from("./tmp")))
+                        })
+                        .map_err(Box::new)
+                        .map_err(|e| MEK::IOError.into_error_with_cause(e))
+                    })
+                });
+
+                res.and_then(|r| match r {
+                    (false, _, _) => {
+                        let cause = Box::new(MEK::CurDirDoesNotExist.into_error());
+                        Err(MEK::NotAMaildirError.into_error_with_cause(cause))
+                    },
+                    (_, false, _) => {
+                        let cause = Box::new(MEK::NewDirDoesNotExist.into_error());
+                        Err(MEK::NotAMaildirError.into_error_with_cause(cause))
+                    },
+                    (_, _, false) => {
+                        let cause = Box::new(MEK::TmpDirDoesNotExist.into_error());
+                        Err(MEK::NotAMaildirError.into_error_with_cause(cause))
+                    },
+                    (true, true, true) => {
+                        Ok(Maildir {
+                            path: p,
+                            subdirs: None,
+                        })
+                    }
+                })
+            })
     }
 
     pub fn from_dir_recursive(p: PathBuf) -> Result<Maildir> {
