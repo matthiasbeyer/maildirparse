@@ -64,6 +64,11 @@ impl Maildir {
             if entry.file_type().is_dir() {
                 match entry {
                     Ok(entry) => {
+                        if ["cur", "new", "tmp"].iter().any(|e| entry.path().ends_with(e)) {
+                            // We do not care about "cur"/"new"/"tmp" at this level.
+                            continue;
+                        }
+
                         match Maildir::from_path(PathBuf::from(entry.path())) {
                             Ok(subdir) => v.push(subdir),
                             Err(e) => {
